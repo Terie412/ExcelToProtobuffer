@@ -1,0 +1,9 @@
+.idea
+Excels
+Output
+Proto
+RawData
+Tools
+**/bin
+**/obj
+dotnet
