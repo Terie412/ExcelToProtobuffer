@@ -4,7 +4,7 @@ Many game studios try to convert Excel data into other forms to read, like json,
 
 This project provides a workflow for easily converting Excel to Protobuf binary data. This project accept two inputs:
 - Excel files that contain actual data that we need to read in game
-- .proto files that define what data in Excel files we need to read, as well as the type of data. 
+- .proto files that describe what data in Excel files we need to read, as well as the type of data. 
 
 Sometimes Excel files contain some extra data, like comments, formulation, pictures. Designers use these extra data to help them to understand the datas better while we need them in game. That's why we need .proto files.
 
