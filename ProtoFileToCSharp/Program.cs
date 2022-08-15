@@ -65,17 +65,20 @@ public class Program
             Logger.Error("outputPath could not be null. Please use --protoPath to tell where to save the output CSharp files");
             return false;
         }
-
-        foreach (var arg in args)
-        {
-            Logger.Info($"args = {arg}");
-        }
-
         return true;
     }
 
-    private static void OnCSharpFileGenerationFinish(string message)
+    private static void OnCSharpFileGenerationFinish(string receiveMsg, string errorMsg)
     {
-        Logger.Info("Finish generating csharp files. " + message);
+        if (!string.IsNullOrEmpty(errorMsg))
+        {
+            Logger.Error("ExecuteAsync Error:" + errorMsg);
+        }
+        Logger.Info("Finish generating csharp files. " + receiveMsg);
+
+        if (!string.IsNullOrEmpty(errorMsg))
+        {
+            Environment.Exit(-1);
+        }
     }
 }

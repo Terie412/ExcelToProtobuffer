@@ -2,7 +2,7 @@
 #pragma warning disable CS0219
 
 using CommandLine;
-using GameConfig;
+using DesignData;
 
 public class Program
 {
@@ -40,7 +40,6 @@ public class Program
         Directory.CreateDirectory(outputPath);
         
         ExcelExporter.Instance.ExportFromDirectory(excelPath, outputPath);
-        // Test();
     }
     
     public static bool InitFromCommandline(string[] args)
@@ -68,33 +67,5 @@ public class Program
         }
 
         return true;
-    }
-
-    private static void Test()
-    {
-        var fileName = outputPath + "/Equipment.bytes";
-        byte[] bytes = File.ReadAllBytes(fileName);
-        if (bytes.Length < 4)
-        {
-            Logger.Error("长度不应该小于4");
-            return;
-        }
-        
-        var byteList = bytes.ToList();
-        int index = 0;
-        List<Equipment> allEquips = new List<Equipment>();
-        while (true)
-        {
-            if (index >= byteList.Count) break;
-
-            var byteLength = byteList.GetRange(index, 4).ToArray();
-            int length = BitConverter.ToInt32(byteLength);
-            var byteData = byteList.GetRange(index + 4, length).ToArray();
-            Equipment equip = Equipment.Parser.ParseFrom(byteData);
-            allEquips.Add(equip);
-            index += length + 4;
-        }
-
-        var a = 1;
     }
 }

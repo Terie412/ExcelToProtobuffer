@@ -399,9 +399,9 @@ public class ExcelExporter : SingleTon<ExcelExporter>
         return results;
     }
 
-    private Dictionary<string, FileDescriptor?> GetFileDescriptorsViaReflection()
+    private Dictionary<string, FileDescriptor?> GetMessageDescriptor()
     {
-        Dictionary<string, FileDescriptor?> result = new Dictionary<string, FileDescriptor?>();
+        Dictionary<string, FileDescriptor?> name_fileDescriptor = new Dictionary<string, FileDescriptor?>();
         AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).ToList().ForEach(type =>
         {
             var pi = type.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static);
@@ -413,11 +413,51 @@ public class ExcelExporter : SingleTon<ExcelExporter>
                     string name = descriptor.Name;
                     if (!name.StartsWith("google"))
                     {
-                        result[name] = descriptor;
+                        name_fileDescriptor[name] = descriptor;
                     }
                 }
             }
         });
-        return result;
+        
+        
+        foreach (var fileDescriptor in name_fileDescriptor.Values)
+        {
+            foreach (var messageDescriptor in fileDescriptor.MessageTypes)
+            {
+                
+            }
+        }
+        return name_fileDescriptor;
+    }
+    
+    private Dictionary<string, FileDescriptor?> GetFileDescriptorsViaReflection()
+    {
+        Dictionary<string, FileDescriptor?> name_fileDescriptor = new Dictionary<string, FileDescriptor?>();
+        AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).ToList().ForEach(type =>
+        {
+            var pi = type.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static);
+            if (!(pi is null))
+            {
+                var value = pi.GetValue(null);
+                if (value is FileDescriptor descriptor)
+                {
+                    string name = descriptor.Name;
+                    if (!name.StartsWith("google"))
+                    {
+                        name_fileDescriptor[name] = descriptor;
+                    }
+                }
+            }
+        });
+        
+        
+        foreach (var fileDescriptor in name_fileDescriptor.Values)
+        {
+            foreach (var messageDescriptor in fileDescriptor.MessageTypes)
+            {
+                
+            }
+        }
+        return name_fileDescriptor;
     }
 }
