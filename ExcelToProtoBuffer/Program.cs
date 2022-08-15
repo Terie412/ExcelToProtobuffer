@@ -31,7 +31,8 @@ public class Program
         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
         if (!InitFromCommandline(args)) return;
-
+        
+        Logger.Info("=== Start Generate Protobuffer binary files...");
         if (Directory.Exists(outputPath))
         {
             Directory.Delete(outputPath, true);
@@ -44,13 +45,13 @@ public class Program
         Test();
     }
 
-    public static bool InitFromCommandline(string[] args)
+    private static bool InitFromCommandline(string[] args)
     {
         var options = Parser.Default.ParseArguments<CommandLineOptions>(args).Value;
         excelPath = options.excelPath;
         outputPath = options.outputPath;
 
-        Logger.Info($"Start Generate Protobuffer binary files"); // Logger.Info($"options = \n{options}");
+        // Logger.Info($"options = \n{options}");
 
         if (string.IsNullOrEmpty(excelPath))
         {

@@ -30,7 +30,9 @@ public class Program
     {
         var isArgsValid = InitFromCommandline(args);
         if (!isArgsValid) return;
-
+        
+        Logger.Info("=== Start Convert proto files to CSharp...");
+        
         if (Directory.Exists(outputPath))
         {
             Directory.Delete(outputPath, true);
@@ -47,7 +49,7 @@ public class Program
         protocPath = options.protocPath;
         outputPath = options.outputPath;
 
-        Logger.Info($"options = \n{options}");
+        // Logger.Info($"options = \n{options}");
         if (string.IsNullOrEmpty(protoPath))
         {
             Logger.Error("protoPath could not be null. Please use --protoPath to tell the location of proto files");
