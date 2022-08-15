@@ -8,18 +8,9 @@ using Google.Protobuf.Reflection;
 
 public class ExcelExporter : SingleTon<ExcelExporter>
 {
-    // Each fileDescriptor corresponds to a .proto file. A fileDescriptor contains all information of the .proto file.
-    private Dictionary<string, FileDescriptor?> name_fileDescriptor = new Dictionary<string, FileDescriptor?>();
-    private Dictionary<string, MessageDescriptor?> name_messageDescriptor = new Dictionary<string, MessageDescriptor?>();
-    private bool isInit = false;
-
-    public void Init()
-    {
-        if (isInit) return;
-
-        // Init FileDescriptors
-        name_fileDescriptor = GetFileDescriptorsViaReflection();
-    }
+    // Each messageDescriptor corresponds to a message struct in proto file. A messageDescriptor contains all information of the message.
+    private Dictionary<string, MessageDescriptor?> name_messageDescriptor = new();
+    private bool                                   isInit                 = false;
 
     public void ExportFromDirectory(string excelPath, string outputPath)
     {
@@ -61,28 +52,20 @@ public class ExcelExporter : SingleTon<ExcelExporter>
             return;
         }
 
-        var protoFileName = fileNameWithoutExtension + ".proto";
-        if (!name_fileDescriptor.TryGetValue(protoFileName, out var fileDescriptor))
+        if (!name_messageDescriptor.TryGetValue(fileNameWithoutExtension, out var messageDescriptor))
         {
             Logger.Error($"FileDescriptor to this Excel could not be found. Try regenerate CSharp from proto files. Excel File : {fileNameWithoutExtension}");
             return;
         }
 
+        Debug.Assert(messageDescriptor != null);
         var fieldName_fieldDescriptor = new Dictionary<string, FieldDescriptor>();
         List<string> validFieldNameList = new List<string>();
-        MessageDescriptor? messageDescriptor = null;
-        Debug.Assert(fileDescriptor != null);
-        foreach (MessageDescriptor? descriptor in fileDescriptor.MessageTypes)
+        MessageDescriptor.FieldCollection? fields = messageDescriptor.Fields;
+        foreach (var field in fields.InDeclarationOrder())
         {
-            if (descriptor.Name != fileNameWithoutExtension) continue;
-
-            messageDescriptor = descriptor;
-            MessageDescriptor.FieldCollection? fields = descriptor.Fields;
-            foreach (var field in fields.InDeclarationOrder())
-            {
-                validFieldNameList.Add(field.Name);
-                fieldName_fieldDescriptor[field.Name] = field;
-            }
+            validFieldNameList.Add(field.Name);
+            fieldName_fieldDescriptor[field.Name] = field;
         }
 
         Debug.Assert(messageDescriptor != null);
@@ -97,9 +80,6 @@ public class ExcelExporter : SingleTon<ExcelExporter>
 
             validIndex_headerName[i] = headerName;
         }
-
-        // Equipment equip = new Equipment();
-        // equip.ToByteArray();
 
         // Each row into a protobuffer byte array
         List<byte[]> bytesList = new List<byte[]>(excelData.rows.Count);
@@ -126,7 +106,7 @@ public class ExcelExporter : SingleTon<ExcelExporter>
             bytesList.Add(bytes);
         }
 
-        IEnumerable<byte> allBytes = new byte[0];
+        IEnumerable<byte> allBytes = Array.Empty<byte>();
         for (var i = 0; i < bytesList.Count; i++)
         {
             var bytes = bytesList[i];
@@ -138,11 +118,19 @@ public class ExcelExporter : SingleTon<ExcelExporter>
         File.WriteAllBytes(outputPath, allBytes.ToArray());
     }
 
+    private void Init()
+    {
+        if (isInit) return;
+
+        // Init FileDescriptors
+        name_messageDescriptor = GetMessageDescriptorsViaReflection();
+    }
+    
     /// Fill message with valueString. fieldDescriptor describes the type of valueString
     private void SetMessageValueByFieldDescriptor(IMessage message, FieldDescriptor fieldDescriptor, string? valueString)
     {
         object val = new object();
-        object[] valArray = new object[0];
+        object[] valArray = Array.Empty<object>();
         switch (fieldDescriptor.FieldType)
         {
             case FieldType.Double:
@@ -399,65 +387,31 @@ public class ExcelExporter : SingleTon<ExcelExporter>
         return results;
     }
 
-    private Dictionary<string, FileDescriptor?> GetMessageDescriptor()
+    private Dictionary<string, MessageDescriptor?> GetMessageDescriptorsViaReflection()
     {
-        Dictionary<string, FileDescriptor?> name_fileDescriptor = new Dictionary<string, FileDescriptor?>();
+        var fileDescriptors = new List<FileDescriptor>();
         AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).ToList().ForEach(type =>
         {
             var pi = type.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static);
             if (!(pi is null))
             {
                 var value = pi.GetValue(null);
-                if (value is FileDescriptor descriptor)
+                if (value is FileDescriptor descriptor && !descriptor.Name.ToLower().StartsWith("google"))
                 {
-                    string name = descriptor.Name;
-                    if (!name.StartsWith("google"))
-                    {
-                        name_fileDescriptor[name] = descriptor;
-                    }
+                    fileDescriptors.Add(descriptor);
                 }
             }
         });
-        
-        
-        foreach (var fileDescriptor in name_fileDescriptor.Values)
+
+        var name_messageDescripor = new Dictionary<string, MessageDescriptor?>();
+        foreach (var fileDescriptor in fileDescriptors)
         {
             foreach (var messageDescriptor in fileDescriptor.MessageTypes)
             {
-                
+                name_messageDescripor[messageDescriptor.Name] = messageDescriptor;
             }
         }
-        return name_fileDescriptor;
-    }
-    
-    private Dictionary<string, FileDescriptor?> GetFileDescriptorsViaReflection()
-    {
-        Dictionary<string, FileDescriptor?> name_fileDescriptor = new Dictionary<string, FileDescriptor?>();
-        AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).ToList().ForEach(type =>
-        {
-            var pi = type.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static);
-            if (!(pi is null))
-            {
-                var value = pi.GetValue(null);
-                if (value is FileDescriptor descriptor)
-                {
-                    string name = descriptor.Name;
-                    if (!name.StartsWith("google"))
-                    {
-                        name_fileDescriptor[name] = descriptor;
-                    }
-                }
-            }
-        });
-        
-        
-        foreach (var fileDescriptor in name_fileDescriptor.Values)
-        {
-            foreach (var messageDescriptor in fileDescriptor.MessageTypes)
-            {
-                
-            }
-        }
-        return name_fileDescriptor;
+
+        return name_messageDescripor;
     }
 }
