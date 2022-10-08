@@ -1,6 +1,6 @@
 [TOC]
 
-In general, game designers like to use Excel to configure game data. We can directly read data from excels. However, this approach is not safe, not extensible, low performance and not easy to distribute.
+In general, game designers prefer to use Excel to configure game data. We can directly read data from excels. However, this approach is not safe, not extensible, low performance and not easy to distribute.
 
 Many game studios try to convert Excel data into other forms to read, like json, protobuf, xml or any self-defined format. And I prefer protobuf. 
 
